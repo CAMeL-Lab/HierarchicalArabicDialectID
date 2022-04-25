@@ -1,5 +1,5 @@
-from salameh import DialectIdentifier
-from salameh import ADIDA_LABELS
+from classifier import DialectIdentifier
+from classifier import ADIDA_LABELS
 from utils import LayerObject
 import os
 

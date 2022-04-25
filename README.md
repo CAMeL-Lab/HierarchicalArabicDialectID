@@ -1,35 +1,36 @@
 # Aggregating Hierarchical Dialectal Data for Arabic Dialect  Classification
 
-This repo contains code for the experiments presented in our paper: [Aggregating Hierarchical Dialectal Data for Arabic Dialect  Classification]().
+This repo contains code for the experiments presented in the paper: [Aggregating Hierarchical Dialectal Data for Arabic Dialect Classification (Baimukan et al., 2022)]().
 
 ## Requirements
 
-This code was written for python>=3.7, pytorch 1.5.1, and transformers 3.1.0. You will also need few additional packages. Here's how you can set up the environment using conda (assuming you have conda and cuda installed):
+This code was written for python>=3.7. You will also need few additional packages. Here's how you can set up the environment using conda (assuming you have conda and cuda installed):
 
 ```bash
 git clone https://github.com/CAMeL-Lab/HierarchicalDID.git
-cd HierarchicalDID
+cd HierarchicalArabicDialectID
 
-conda create -n HierarchicalDID python=3.7
-conda activate HierarchicalDID
+conda create -n HierarchicalArabicDialectID python=3.7
+conda activate HierarchicalArabicDialectID
 
 pip install -r requirements.txt
 
 
 ```
 
-## HierarchicalDID LMs
+## HierarchicalArabicDialectID LMs
 
 Our Arabic Dialectal Language Models can be found [here](https://drive.google.com/drive/folders/1-_uZnl8LamZO9RPYguJJOywJTvJtWUyg?usp=sharing)
 
 
 ## Classification
 
-In order to run classification experiments using aggregragated LMs and Salameh's model run following commands:
+The code we use for classificatioin extends on [CAMeL Tools](https://github.com/CAMeL-Lab/camel_tools) [(Obeid et al. (2020)](https://aclanthology.org/2020.lrec-1.868v2.pdf), which rebuilt the model by [Salameh et al. (2018)](https://aclanthology.org/C18-1113/).
+In order to run the classification experiments using the aggregragated LMs in this repo and Baimukan et al. (2022)'s model, use the following commands:
 
 ```bash
 cd classification
-python run_salameh.py
+python run_classifier.py
 ```
 
 ## Data Preprocessing
@@ -41,12 +42,12 @@ In order to extract certain data sets you can use the notebooks inside `data_pre
 
 If you find any of the this work useful, please cite [our paper]():
 ```bibtex
-@inproceedings{baimukan-etal-2022-interplay,
+@inproceedings{baimukan-etal-2022-aggregating,
     title = "Aggregating Hierarchical Dialectal Data for Arabic Dialect  Classification",
     author = " Baimukan, Nurpeiis  and
       Habash, Nizar and 
       Bouamor, Houda",
-    booktitle = "Proceedings of the Sixth Arabic Natural Language Processing Workshop",
+    booktitle = "Proceedings of the Language Resources and Evaluation Conference (LREC)",
     month = june,
     year = "2022",
     address = "Marseille, France",
