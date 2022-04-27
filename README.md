@@ -7,7 +7,7 @@ This repo contains code for the experiments presented in the paper: [Aggregating
 This code was written for python>=3.7. You will also need few additional packages. Here's how you can set up the environment using conda (assuming you have conda and cuda installed):
 
 ```bash
-git clone https://github.com/CAMeL-Lab/HierarchicalDID.git
+git clone https://github.com/CAMeL-Lab/HierarchicalArabicDialectID.git
 cd HierarchicalArabicDialectID
 
 conda create -n HierarchicalArabicDialectID python=3.7
