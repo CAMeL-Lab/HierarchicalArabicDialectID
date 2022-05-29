@@ -13,6 +13,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, f1_score, recall_score
 from sklearn.metrics import precision_score
+from camel_tools.tokenizers.word import simple_word_tokenize
+from camel_tools.utils.dediac import dediac_ar
 
 
 class LayerObject:
@@ -119,7 +121,7 @@ class LayerObject:
         word_ngram_range = (1, 1)
 
         y, sentences = file2dialectsentence(
-            [self.train_path], self.level, repeat=repeat)
+            [self.train_path], self.level, repeat, False, True)
 
         # Build and train aggregated classifier
         self.label_encoder = LabelEncoder()
@@ -217,26 +219,56 @@ def word_to_char(txt):
     return ' '.join(list(txt.replace(' ', 'X')))
 
 
-def file2dialectsentence(files, level, repeat=0):
+def file2dialectsentence_chunks(files, level, repeat=0, chunksize=1000000):
+    dfs = pd.read_csv(files[0], sep='\t', header=0, chunksize=chunksize)
+    for i in range(1, len(files)):
+        additional_dfs = pd.read_csv(
+            files[i], sep='\t', header=0,  chunksize=chunksize)
+
+    return df2dialectsentence(dfs, level, repeat)
+
+
+def file2dialectsentence(files, level, repeat=0, from_model=False, from_agg=False):
     df = pd.read_csv(files[0], sep='\t', header=0)
     for i in range(1, len(files)):
         df = df.append(pd.read_csv(files[i], sep='\t', header=0))
 
-    return df2dialectsentence(df, level, repeat)
+    return df2dialectsentence(df, level, repeat, from_model, from_agg)
 
 
-def df2dialectsentence(df, level, repeat=0):
+def df2dialectsentence(df, level, repeat=0, from_model=False, from_agg=False):
     """
         df: pd.DataFrame with sentences
         level: string representation of the level, whether it be 'city', 'country', or 'region'
         return y, x
     """
-    sentence_list = df['original_sentence'].tolist()
-    if repeat > 0:
-        sentence_list = [' '.join([i]*(repeat+1)) for i in sentence_list]
+    sentences = df['original_sentence'].tolist()
+    sentence_list = [' '.join(simple_word_tokenize(i))
+                     for i in sentences]
+    if from_model:
+        sentence_list = sentences
+    if from_agg:
+        sentence_list = [' '.join(simple_word_tokenize(dediac_ar(s)))
+                         for s in sentences]
 
     dialect_list = df2dialect(df, level)
     return dialect_list, sentence_list
+
+
+def get_label_space(level):
+    label_space = {}
+    with open(f'../labels/{level}_label_id.txt') as f:
+        lines = f.readlines()
+        for line in lines:
+            label, index = line.split(',')
+            label_space[label.replace(' ', '-')] = int(index.replace('\n', ''))
+
+    return label_space
+
+
+def transform_labels(list_labels, label_space):
+    labels_num = [label_space[i] for i in list_labels]
+    return labels_num
 
 
 def df2dialect(df, level):
@@ -307,12 +339,3 @@ def whole_process(level, train_files):
     end = timeit.default_timer()
     print('Finished in ', end - start)
 
-
-if __name__ == '__main__':
-    level = 'country'
-    train_files = [f'../aggregated_data/{level}_train.tsv']
-    whole_process(level, train_files)
-    """
-    layer = LayerObject(level, False, train_files,
-                        [], 'aggregate_city/MADAR-Corpus-26-train.lines', None, None)
-    """

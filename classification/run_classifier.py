@@ -7,7 +7,7 @@ import os
 def run_experiment(aggregated_layers=None, repeat_train=0, repeat_eval=0,
                    file_name='results.json', labels_test_save='labels_test.csv', labels_dev_save='labels_dev.csv',
                    char_lm_dir=None, word_lm_dir=None, extra=True,
-                   data_train_path=None, data_test_path='TEST', data_dev_path='VALIDATION', labels=ADIDA_LABELS):
+                   data_train_path=None, data_test_path=None, data_dev_path=None, labels=ADIDA_LABELS, chunk_train=False):
     print('Running Experiment')
     d = DialectIdentifier(result_file_name=file_name,
                           aggregated_layers=aggregated_layers,
@@ -16,9 +16,15 @@ def run_experiment(aggregated_layers=None, repeat_train=0, repeat_eval=0,
                           char_lm_dir=char_lm_dir,
                           word_lm_dir=word_lm_dir,
                           extra=extra, labels=labels)
-    d.train(data_path=data_train_path)
-    test_scores = d.eval(data_set=data_test_path, save_labels=labels_test_save)
-    val_scores = d.eval(data_set=data_dev_path, save_labels=labels_dev_save)
+    if not chunk_train:
+        d.train(data_path=data_train_path)
+    else:
+        d.train_chunks(data_path=data_train_path)
+
+    test_scores = d.eval(
+        data_set='TEST', data_path=data_test_path, save_labels=labels_test_save)
+    val_scores = d.eval(data_set='VALIDATION',
+                        data_path=data_dev_path, save_labels=labels_dev_save)
     d.record_experiment(test_scores, val_scores)
     print(test_scores, val_scores)
 
@@ -138,47 +144,65 @@ def layers_combo_experiment(layers_combo):
     region = layers_combo[0][2][0]
     country = layers_combo[1][2][0]
     city = layers_combo[2][2][0]
+    # none
+    run_experiment(aggregated_layers=None, repeat_train=0,
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="combo_test.tsv",  labels_dev_save="combo_dev.csv")
+    # city
+    city_layer = LayerObject(city)
+    run_experiment(aggregated_layers=[city_layer], repeat_train=0,
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="city_combo_test.tsv",  labels_dev_save="city_combo_dev.csv")
 
-    #city + country
+    # country
+    country_layer = LayerObject(country)
+    run_experiment(aggregated_layers=[country_layer], repeat_train=0,
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="country_combo_test.tsv",  labels_dev_save="country_combo_dev.csv")
+    # region
+    region_layer = LayerObject(region)
+    run_experiment(aggregated_layers=[region_layer], repeat_train=0,
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="region_combo_test.tsv",  labels_dev_save="region_combo_dev.csv")
+
+    # city + country
     city_layer = LayerObject(city)
     country_layer = LayerObject(country)
     run_experiment(aggregated_layers=[city_layer, country_layer], repeat_train=0,
-                   repeat_eval=0, file_name='layers_combo.json', labels_test_save="city_country_combo_test.tsv",  labels_dev_save="city_country_combo_dev.csv")
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="city_country_combo_test.tsv",  labels_dev_save="city_country_combo_dev.csv")
 
-    #city + region
+    # city + region
     city_layer = LayerObject(city)
     region_layer = LayerObject(region)
     run_experiment(aggregated_layers=[city_layer, region_layer], repeat_train=0,
-                   repeat_eval=0, file_name='layers_combo.json', labels_test_save="city_region_combo_test.tsv",  labels_dev_save="city_region_combo_dev.csv")
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="city_region_combo_test.tsv",  labels_dev_save="city_region_combo_dev.csv")
 
-    #region + country
+    # region + country
     region_layer = LayerObject(region)
     country_layer = LayerObject(country)
     run_experiment(aggregated_layers=[region_layer, country_layer], repeat_train=0,
-                   repeat_eval=0, file_name='layers_combo.json', labels_test_save="region_country_combo_test.tsv",  labels_dev_save="region_country_combo_dev.csv")
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="region_country_combo_test.tsv",  labels_dev_save="region_country_combo_dev.csv")
 
-    #city + country + region
+    # city + country + region
     city_layer = LayerObject(city)
     country_layer = LayerObject(country)
     region_layer = LayerObject(region)
     run_experiment(aggregated_layers=[city_layer, country_layer, region_layer], repeat_train=0,
-                   repeat_eval=0, file_name='layers_combo.json', labels_test_save="city_country_region_combo_test.tsv",  labels_dev_save="city_country_region_combo_dev.csv")
+                   repeat_eval=0, file_name='combination_experiment_results.json', labels_test_save="city_country_region_combo_test.tsv",  labels_dev_save="city_country_region_combo_dev.csv")
 
 
 def run_aggregated_experiment(level):
     print(f'Aggregated experiment on {level} level')
     labels = [i[:-5]
               for i in os.listdir(f'aggregated_{level}/lm/char') if 'arpa' in i]
+    chunk_train = False
+    if level != 'city':
+        chunk_train = True
     run_experiment(aggregated_layers=None, repeat_train=0,
                    repeat_eval=0, file_name='aggregated_result.json',
                    labels_test_save=f'labels_agg_{level}_test.csv', labels_dev_save=f'labels_agg_{level}_dev.csv',
                    char_lm_dir=f'aggregated_{level}/lm/char', word_lm_dir=f'aggregated_{level}/lm/word',
                    extra=False, data_train_path=[f'../aggregated_data/{level}_train.tsv'],
-                   data_test_path=[f'../aggregated_data/{level}_test.tsv'], data_dev_path=[f'../aggregated_data/{level}_dev.tsv'], labels=labels)
+                   data_test_path=[f'../aggregated_data/{level}_test.tsv'], data_dev_path=[f'../aggregated_data/{level}_dev.tsv'], labels=labels, chunk_train=chunk_train)
 
 
 if __name__ == '__main__':
-    """
     levels = ['city', 'country', 'region']
     kenlm_train = False
     exclude_list = {'city': [[], ['msa-msa-msa']],
@@ -193,50 +217,22 @@ if __name__ == '__main__':
         single_layers.append(layers)
 
     combos = get_combo(levels)
-    print(combos)
-    layers_combo = get_layers_combinations(combos, single_layers)
-    file_name = 'results_salameh_plus.json'
-    run_experiments(layers_combo, file_name)
-    """
 
-    # run_experiment(aggregated_layers=None, repeat_train=0,
-    #               repeat_eval=0, file_name='results_aaa.json')
-    levels = ['city', 'country', 'region']
-    kenlm_train = False
-    exclude_list = {'city': [[], ['msa-msa-msa']],
-                    'country': [[], ['msa-msa']],
-                    'region': [[], ['msa']]}
-    use_lm = [True, False]
-    use_distr = [True, False]
-    single_layers = []
-    for level in levels:
-        layers = get_single_layer_list(
-            level, kenlm_train, exclude_list, use_lm, use_distr)
-        single_layers.append(layers)
-
-    combos = get_combo(levels)
-    # print(combos)
     layers_combo = get_layers_combinations(combos, single_layers)
-    # Aggregated layer experiment
-    run_aggregated_experiment('city')
-    run_aggregated_experiment('country')
-    run_aggregated_experiment('region')
-    """
+
     # Layers combo experiment
     layers_combo_experiment(layers_combo)
-    
-    #Usual expriments
+
+    """
+
+    # oracle
     run_experiment(aggregated_layers=None, repeat_train=0,
                    repeat_eval=0, file_name='results_sal_agg.json',
                    labels_test_save="labels_test_salameh_agg.csv",  labels_dev_save="labels_dev_salameh_agg.csv",
                    data_train_path=['data/MADAR-Corpus-26-train.lines', 'data/MADAR-Corpus-26-dev.lines', 'data/MADAR-Corpus-26-test.lines'])
 
-    run_experiment(aggregated_layers=None, repeat_train=0,
-                   repeat_eval=0, file_name='results_sal_agg.json',
-                   labels_test_save="camel.tsv",  labels_dev_save="labels_dev_salameh_agg.csv")
-
-    l = LayerObject(layers_combo[0][2][0])
-    l = LayerObject(layers_combo[0][2][0])
-    run_experiment(aggregated_layers=[l], repeat_train=0,
-                   repeat_eval=0, file_name='results_sal+best.json', labels_test_save="camel_region.tsv",  labels_dev_save="labels_dev_salameh.csv")
+    # Aggregated layer experiment
+    run_aggregated_experiment('city')
+    run_aggregated_experiment('country')
+    run_aggregated_experiment('region')
     """

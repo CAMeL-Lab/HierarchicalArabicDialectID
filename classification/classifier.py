@@ -346,12 +346,12 @@ class DialectIdentifier(object):
             data_extra_path = [_TRAIN_DATA_EXTRA_PATH]
         if level is None:
             level = 'city'
-
+        print(data_path)
         y, x = file2dialectsentence(
-            data_path, level, self.repeat_sentence_train)
+            data_path, level, self.repeat_sentence_train, True)
         if self.extra:
             y_extra, x_extra = file2dialectsentence(
-                data_extra_path, level, self.repeat_sentence_train)
+                data_extra_path, level, self.repeat_sentence_train, False, True)
 
         # Build and train extra classifier
         if self.extra:
@@ -442,7 +442,7 @@ class DialectIdentifier(object):
         if level is None:
             level = 'city'
         y_true, x = file2dialectsentence(
-            data_path, level, self.repeat_sentence_eval)
+            data_path, level, self.repeat_sentence_eval, True)
 
         # Generate predictions
         x_prepared = self._prepare_sentences(x)
@@ -452,7 +452,6 @@ class DialectIdentifier(object):
         df = pd.DataFrame(columns=['gold', 'pred'])
         df['gold'] = y_true
         df['pred'] = y_pred
-        print(len(y_pred), len(y_true))
         df.to_csv(save_labels, sep='\t', header=True, index=False)
         # Get scores
         levels_scores = levels_eval(y_true, y_pred, level)
@@ -515,6 +514,3 @@ if __name__ == '__main__':
     d.train()
     scores = d.eval(data_set='TEST')
     dev = d.eval()
-    print(scores)
-    print('val', dev)
-    # d.record_experiment(scores)
