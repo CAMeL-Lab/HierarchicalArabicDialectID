@@ -40,7 +40,7 @@ In order to extract certain data sets you can use the notebooks inside `data_pre
 
 ## Citation:
 
-If you find any of the this work useful, please cite [our paper]():
+If you find any of the this work useful, please cite [our paper](https://aclanthology.org/2022.lrec-1.489.pdf):
 ```bibtex
 @inproceedings{baimukan-etal-2022-aggregating,
     title = "Aggregating Hierarchical Dialectal Data for Arabic Dialect  Classification",
